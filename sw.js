@@ -29,10 +29,12 @@ self.addEventListener('activate', event => {
 
 async function networkFirst(request) {
   const cache = await caches.open(CACHE_NAME);
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), NETWORK_TIMEOUT);
+  // 页面导航不设超时：首次访问或网络慢时，等网络比直接失败更好。
+  const isNavigation = request.mode === 'navigate';
+  const controller = isNavigation ? null : new AbortController();
+  const timer = controller ? setTimeout(() => controller.abort(), NETWORK_TIMEOUT) : null;
   try {
-    const response = await fetch(request, { signal: controller.signal });
+    const response = await fetch(request, controller ? { signal: controller.signal } : undefined);
     if (response && response.ok && response.type === 'basic') cache.put(request, response.clone());
     return response;
   } catch (error) {

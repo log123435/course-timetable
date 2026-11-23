@@ -18,7 +18,7 @@ jobs:
   deploy:
     environment:
       name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+      url: ${{ steps.deploy-retry.outputs.page_url || steps.deploy.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -29,6 +29,18 @@ jobs:
         uses: actions/upload-pages-artifact@v3
         with:
           path: .
+      # 刚上传完就调用部署接口时，GitHub 的 artifact 元数据偶尔还没同步，
+      # deploy-pages 会报 "Found 0 artifact(s)"。先等几秒，失败后再重试一次。
+      - name: Wait for artifact metadata
+        run: sleep 15
       - name: Deploy to GitHub Pages
-        id: deployment
+        id: deploy
+        uses: actions/deploy-pages@v4
+        continue-on-error: true
+      - name: Back off before retry
+        if: steps.deploy.outcome == 'failure'
+        run: sleep 25
+      - name: Deploy to GitHub Pages (retry)
+        id: deploy-retry
+        if: steps.deploy.outcome == 'failure'
         uses: actions/deploy-pages@v4

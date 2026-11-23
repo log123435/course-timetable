@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#f7f8fc" />
+  <meta name="description" content="课迹，支持表格和图片识别的移动课程表" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="课迹" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <title>课迹 · 我的课程表</title>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand-mark" aria-label="课迹">
+        <span class="brand-icon">课</span>
+        <span>
+          <strong>课迹</strong>
+          <small>我的学习节奏</small>
+        </span>
+      </div>
+      <div class="topbar-actions">
+        <button class="icon-button" id="installButton" title="安装到手机" hidden>↥</button>
+        <button class="avatar-button" id="quickAddButton" title="添加课程">＋</button>
+      </div>
+    </header>
+
+    <main>
+      <section class="view active" id="viewSchedule" aria-labelledby="scheduleTitle">
+        <div class="page-heading">
+          <div>
+            <p class="eyebrow" id="termLabel">本学期 · 课程安排</p>
+            <h1 id="scheduleTitle">今天，按自己的节奏来</h1>
+          </div>
+          <div class="date-pill" id="todayDate"></div>
+        </div>
+
+        <section class="week-switcher" aria-label="周次切换">
+          <button class="round-button" id="previousWeek" aria-label="上一周">←</button>
+          <button class="week-current" id="currentWeekButton">
+            <span class="week-current-label">当前周次</span>
+            <strong id="weekLabel">第 12 周</strong>
+          </button>
+          <button class="round-button" id="nextWeek" aria-label="下一周">→</button>
+        </section>
+
+        <div class="quick-stats" id="quickStats"></div>
+
+        <section class="next-up card" id="nextUpCard"></section>
+
+        <section class="import-banner">
+          <div class="import-icon">✦</div>
+          <div class="import-copy">
+            <strong>把课表交给课迹</strong>
+            <span>支持 Excel、CSV 或截图，自动整理成清晰周视图</span>
+          </div>
+          <button class="primary-button small" id="openImportButton">导入课表</button>
+        </section>
+
+        <section class="schedule-section">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">一周安排</p>
+              <h2>课程表</h2>
+            </div>
+            <div class="heading-actions"><button class="text-button" id="todayButton">回到今天</button><button class="text-button danger-text" id="clearCoursesButton">清空课表</button></div>
+          </div>
+          <div class="timetable-scroll" aria-label="每周课程表">
+            <div class="timetable-shell">
+              <div class="table-head" id="tableHead"></div>
+              <div class="table-body">
+                <div class="period-column" id="periodColumn"></div>
+                <div class="week-grid" id="weekGrid"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </section>
+
+      <section class="view" id="viewMemos" aria-labelledby="memoTitle">
+        <div class="page-heading compact">
+          <div>
+            <p class="eyebrow">随手记录</p>
+            <h1 id="memoTitle">图片备忘</h1>
+          </div>
+          <button class="primary-button" id="uploadMemoButton">上传图片</button>
+          <input type="file" id="memoFileInput" accept="image/*" hidden />
+        </div>
+        <p class="page-intro">把作业要求、实验步骤或黑板照片留在同一个地方。</p>
+        <div class="memo-filters" id="memoFilters"></div>
+        <div class="memo-grid" id="memoGrid"></div>
+      </section>
+
+      <section class="view" id="viewSettings" aria-labelledby="settingsTitle">
+        <div class="page-heading compact">
+          <div>
+            <p class="eyebrow">偏好设置</p>
+            <h1 id="settingsTitle">让课表更贴合你</h1>
+          </div>
+        </div>
+        <section class="settings-card card">
+          <div class="settings-row">
+            <div>
+              <strong>当前学期</strong>
+              <span>切换后课程表会显示对应学期</span>
+            </div>
+            <select id="semesterSelect"></select>
+          </div>
+          <div class="settings-actions semester-actions">
+            <button class="secondary-button" id="addSemesterButton">新建学期</button>
+            <button class="danger-button" id="deleteSemesterButton">删除当前学期</button>
+          </div>
+        </section>
+        <section class="settings-card card">
+          <div class="settings-row">
+            <div>
+              <strong>学期开始日期</strong>
+              <span>用于自动计算当前周次</span>
+            </div>
+            <input type="date" id="semesterStartInput" />
+          </div>
+          <div class="settings-row">
+            <div>
+              <strong>当前周次</strong>
+              <span>可以手动跳到指定周</span>
+            </div>
+            <input type="number" id="currentWeekInput" min="1" max="60" step="1" />
+          </div>
+          <div class="settings-row">
+            <div>
+              <strong>每日节数</strong>
+              <span>课程表显示的最大节次数</span>
+            </div>
+            <select id="periodCountInput">
+              <option value="8">8 节</option>
+              <option value="10">10 节</option>
+              <option value="11">11 节</option>
+              <option value="12">12 节</option>
+              <option value="14">14 节</option>
+            </select>
+          </div>
+        </section>
+        <section class="settings-card card">
+          <div class="section-heading tight">
+            <div>
+              <p class="eyebrow">数据工具</p>
+              <h2>数据管理</h2>
+            </div>
+          </div>
+          <div class="settings-actions">
+            <button class="secondary-button" id="exportDataButton">导出我的数据</button>
+            <button class="secondary-button" id="resetDataButton">恢复示例课表</button>
+            <button class="danger-button" id="clearCoursesSettingsButton">清空当前学期课表</button>
+          </div>
+        </section>
+        <section class="about-card">
+          <span class="about-symbol">✦</span>
+          <div>
+            <strong>课迹 1.0</strong>
+            <p>课程数据只保存在当前设备。识别图片时需要网络加载 OCR 引擎。</p>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <nav class="bottom-nav" aria-label="主导航">
+      <button class="nav-item active" data-view="viewSchedule">
+        <span class="nav-icon">▦</span><span>课表</span>
+      </button>
+      <button class="nav-item" data-view="viewMemos">
+        <span class="nav-icon">▤</span><span>备忘</span>
+      </button>
+      <button class="nav-item" data-view="viewSettings">
+        <span class="nav-icon">◌</span><span>设置</span>
+      </button>
+    </nav>
+  </div>
+
+  <dialog class="modal" id="courseDialog">
+    <form method="dialog" id="courseForm">
+      <div class="modal-heading">
+        <div>
+          <p class="eyebrow">课程编辑</p>
+          <h2 id="courseDialogTitle">添加一门课程</h2>
+        </div>
+        <button type="button" class="close-button" value="cancel" aria-label="关闭">×</button>
+      </div>
+      <input type="hidden" id="courseIdInput" />
+      <div class="form-grid">
+        <label class="field full"><span>课程名称</span><input id="courseNameInput" required placeholder="例如：高等数学" /></label>
+        <label class="field"><span>星期</span><select id="courseDayInput" required><option value="1">星期一</option><option value="2">星期二</option><option value="3">星期三</option><option value="4">星期四</option><option value="5">星期五</option><option value="6">星期六</option><option value="7">星期日</option></select></label>
+        <label class="field"><span>开始节</span><select id="courseStartInput" required></select></label>
+        <label class="field"><span>结束节</span><select id="courseEndInput" required></select></label>
+        <label class="field"><span>上课地点</span><input id="courseRoomInput" placeholder="例如：A-203" /></label>
+        <label class="field"><span>授课老师</span><input id="courseTeacherInput" placeholder="例如：李老师" /></label>
+        <label class="field full"><span>上课周次</span><input id="courseWeeksInput" placeholder="例如：1-16周、3-9周,15周、1-15周(单)" /></label>
+        <label class="field full"><span>备注</span><textarea id="courseNoteInput" rows="2" placeholder="选填"></textarea></label>
+      </div>
+      <div class="color-picker" id="courseColorPicker">
+        <span>卡片颜色</span>
+        <button type="button" class="color-dot violet selected" data-color="violet" aria-label="紫色"></button>
+        <button type="button" class="color-dot mint" data-color="mint" aria-label="薄荷色"></button>
+        <button type="button" class="color-dot orange" data-color="orange" aria-label="橙色"></button>
+        <button type="button" class="color-dot blue" data-color="blue" aria-label="蓝色"></button>
+        <button type="button" class="color-dot pink" data-color="pink" aria-label="粉色"></button>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="danger-button" id="deleteCourseButton" hidden>删除课程</button>
+        <span></span>
+        <button type="button" class="secondary-button" value="cancel">取消</button>
+        <button type="submit" class="primary-button" id="saveCourseButton">保存课程</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog class="modal import-modal" id="importDialog">
+    <form method="dialog" id="importForm">
+      <div class="modal-heading">
+        <div>
+          <p class="eyebrow">智能导入</p>
+          <h2>把课表变成可编辑课程</h2>
+        </div>
+        <button type="button" class="close-button" value="cancel" aria-label="关闭">×</button>
+      </div>
+      <div class="drop-zone" id="dropZone">
+        <input type="file" id="scheduleFileInput" accept=".csv,.txt,.xlsx,.xls,image/*" hidden />
+        <div class="drop-icon">↥</div>
+        <strong>选择课表文件</strong>
+        <span>支持 Excel、CSV、TXT 或课程表截图</span>
+        <button type="button" class="secondary-button" id="chooseScheduleFile">浏览文件</button>
+        <button type="button" class="text-button" id="loadProjectScheduleButton">读取项目中的课表.xlsx</button>
+      </div>
+      <div class="file-preview" id="filePreview" hidden>
+        <div class="preview-thumb" id="previewThumb"></div>
+        <div><strong id="fileName"></strong><span id="fileMeta"></span></div>
+        <button type="button" class="text-button" id="removeFileButton">移除</button>
+      </div>
+      <div class="ocr-progress" id="ocrProgress" hidden>
+        <div class="progress-line"><span id="ocrStatus">准备识别</span><strong id="ocrPercent">0%</strong></div>
+        <div class="progress-track"><span id="ocrProgressBar"></span></div>
+      </div>
+      <div class="raw-text-section" id="rawTextSection" hidden>
+        <div class="section-heading tight"><div><p class="eyebrow">识别结果</p><h3>核对文本</h3></div><span class="parsed-count" id="parsedCount"></span></div>
+        <textarea id="rawScheduleText" rows="7" placeholder="识别到的文字会出现在这里，你可以直接修改"></textarea>
+        <p class="field-hint">建议格式：课程名，星期，开始节-结束节，教室，老师。每行一门课。</p>
+      </div>
+      <div class="modal-actions">
+        <span class="import-tip" id="importTip">先选择一个文件</span>
+        <button type="button" class="secondary-button" id="recognizeButton" disabled>开始识别</button>
+        <button type="submit" class="primary-button" id="importCoursesButton" value="import" disabled>导入课程</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog class="modal memo-modal" id="memoDialog">
+    <form method="dialog" id="memoForm">
+      <div class="modal-heading">
+        <div><p class="eyebrow">图片备忘</p><h2>保存一张学习记录</h2></div>
+        <button type="button" class="close-button" value="cancel" aria-label="关闭">×</button>
+      </div>
+      <div class="memo-preview" id="memoPreview"></div>
+      <label class="field full"><span>标题</span><input id="memoTitleInput" placeholder="例如：线性代数作业要求" required /></label>
+      <label class="field full"><span>补充说明</span><textarea id="memoNoteInput" rows="3" placeholder="写下你之后需要提醒自己的内容"></textarea></label>
+      <div class="memo-tags" id="memoTags"><span>标签</span><button type="button" class="tag selected" data-tag="学习">学习</button><button type="button" class="tag" data-tag="作业">作业</button><button type="button" class="tag" data-tag="考试">考试</button><button type="button" class="tag" data-tag="其他">其他</button></div>
+      <div class="modal-actions"><span></span><button type="button" class="secondary-button" value="cancel">取消</button><button type="submit" class="primary-button">保存备忘</button></div>
+    </form>
+  </dialog>
+
+  <dialog class="modal viewer-modal" id="memoViewerDialog">
+    <div class="modal-heading">
+      <div><p class="eyebrow">图片备忘</p><h2 id="memoViewerTitle">备忘详情</h2></div>
+      <button type="button" class="close-button" value="cancel" aria-label="关闭">×</button>
+    </div>
+    <div class="viewer-image-wrap"><img id="memoViewerImage" class="viewer-image" alt="完整备忘图片"></div>
+    <div class="viewer-content"><p id="memoViewerNote"></p><span id="memoViewerMeta"></span></div>
+  </dialog>
+
+  <div class="toast" id="toast" role="status"></div>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

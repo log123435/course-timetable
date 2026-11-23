@@ -1,0 +1,19 @@
+# Personal course schedules and uploaded images
+课表.xlsx
+课程表.xlsx
+*.xlsx
+*.xls
+*.jpg
+*.jpeg
+*.png
+!icons/*.png
+
+# Local server and editor files
+server.out
+server.err
+tools/
+.vscode/
+.idea/
+*.log
+.DS_Store
+Thumbs.db
